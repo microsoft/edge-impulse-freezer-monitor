@@ -1,0 +1,1 @@
+# edge-impulse-freezer-monitor
