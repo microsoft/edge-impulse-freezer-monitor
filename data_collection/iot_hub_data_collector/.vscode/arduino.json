@@ -1,0 +1,6 @@
+{
+    "configuration": "FlashFreq=80,UploadSpeed=921600,DebugLevel=none,PartitionScheme=default",
+    "board": "esp32:esp32:featheresp32",
+    "sketch": "iot_hub_data_collector.ino",
+    "port": "COM7"
+}
