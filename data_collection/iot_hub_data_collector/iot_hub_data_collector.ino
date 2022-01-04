@@ -4,7 +4,6 @@
 #include <WiFi.h>
 #include <mqtt_client.h>
 
-#include <az_iot_hub_client.h>
 #include <az_result.h>
 #include <az_span.h>
 #include <azure_ca.h>
@@ -56,9 +55,7 @@ static AzIoTSasToken sasToken(
     AZ_SPAN_FROM_BUFFER(sas_signature_buffer),
     AZ_SPAN_FROM_BUFFER(mqtt_password));
 
-
-#define INTERVAL 600
-static uint64_t send_interval_ms;
+static const uint64_t send_interval_ms = 5000;
 uint64_t last_sent_time_ms;
 
 temp_sensor tmp;
@@ -76,7 +73,13 @@ void setup() {
 
 void loop(void)
 {
-  if ((int)(millis() - last_sent_time_ms) >= TELEMETRY_FREQUENCY_MILLISECS)
+    if (sasToken.IsExpired())
+    {
+        esp_mqtt_client_destroy(mqtt_client);
+        initializeMqttClient();
+        Logger.Info("renewed");
+    }
+  if ((int)(millis() - last_sent_time_ms) >= send_interval_ms)
   {     
         float temperature_reading = tmp.temperature();
         Logger.Info("Sending: " + String(temperature_reading));
@@ -94,7 +97,7 @@ static void sendTelemetry(float payload)
   az_span telemetry = AZ_SPAN_FROM_BUFFER(telemetry_payload);
 
   Logger.Info("Sending telemetry ...");
-      uint8_t property_buffer[64];
+  uint8_t property_buffer[64];
   az_span property_span = AZ_SPAN_FROM_BUFFER(property_buffer);
 
   // Initialize the property struct with the span.
@@ -102,7 +105,7 @@ static void sendTelemetry(float payload)
   az_iot_message_properties_init(&props, property_span, 0);
 
   // Append properties.
-  az_iot_message_properties_append(
+    az_iot_message_properties_append(
       &props, AZ_SPAN_FROM_STR(AZ_IOT_MESSAGE_PROPERTIES_CONTENT_TYPE), AZ_SPAN_LITERAL_FROM_STR("application%2Fjson"));
     az_iot_message_properties_append(
       &props, AZ_SPAN_FROM_STR(AZ_IOT_MESSAGE_PROPERTIES_CONTENT_ENCODING), AZ_SPAN_LITERAL_FROM_STR("UTF-8"));
@@ -140,12 +143,11 @@ static void getTelemetryPayload(az_span payload, az_span* out_payload, float pay
 {
   az_span original_payload = payload;
   payload = az_span_copy(
-      payload, AZ_SPAN_FROM_STR("{ \"deviceId\": \"" IOT_CONFIG_DEVICE_ID "\", \"messageId\": "));
+      payload, AZ_SPAN_FROM_STR("{\"deviceId\":\"" IOT_CONFIG_DEVICE_ID "\", \"messageId\":"));
   (void)az_span_u32toa(payload, telemetry_send_count++, &payload);
-  payload = az_span_copy(payload, AZ_SPAN_FROM_STR(" \"Temperature\": \""));
+  payload = az_span_copy(payload, AZ_SPAN_FROM_STR(", \"Temperature\":"));
   (void)az_span_dtoa(payload, payloadValue, 4, &payload);
-  payload = az_span_copy(payload, AZ_SPAN_FROM_STR(" }"));
-  payload = az_span_copy_u8(payload, '\0');
+  payload = az_span_copy(payload, AZ_SPAN_FROM_STR("}"));
 
 
   *out_payload = az_span_slice(original_payload, 0, az_span_size(original_payload) - az_span_size(payload));
@@ -234,7 +236,7 @@ static int initializeMqttClient()
   mqtt_config.client_id = mqtt_client_id;
   mqtt_config.username = mqtt_username;
   mqtt_config.password = (const char*)az_span_ptr(sasToken.Get());
-  mqtt_config.keepalive = 30;
+  mqtt_config.keepalive = 120;
   mqtt_config.disable_clean_session = 0;
   mqtt_config.disable_auto_reconnect = false;
   mqtt_config.event_handle = mqtt_event_handler;
