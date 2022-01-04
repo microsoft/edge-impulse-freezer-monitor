@@ -169,7 +169,7 @@ static void getTelemetryPayload(az_span payload, az_span* out_payload, float pay
   payload = az_span_copy(
       payload, AZ_SPAN_FROM_STR("{ \"deviceId\": \"" IOT_CONFIG_DEVICE_ID "\", \"msgCount\": "));
   (void)az_span_u32toa(payload, telemetry_send_count++, &payload);
-  payload = az_span_copy(payload, AZ_SPAN_FROM_STR(" \"Temperature\": \""));
+  payload = az_span_copy(payload, AZ_SPAN_FROM_STR(" \"anomalyScore\": \""));
   (void)az_span_dtoa(payload, payloadValue, 4, &payload);
   payload = az_span_copy(payload, AZ_SPAN_FROM_STR(" }"));
   payload = az_span_copy_u8(payload, '\0');
