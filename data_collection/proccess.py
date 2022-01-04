@@ -20,24 +20,17 @@ acquisition_format = {
 
 j = 0
 
-for root, dirs, files in os.walk('../Data/'):
+sample = acquisition_format
+
+for root, dirs, files in os.walk('./data_collection/Data/'):
     for file in files:
-        with open(os.path.join(root, file)) as file:
+        with open(os.path.join(root, file), "r") as file:
             text = file.readlines()
-            # print(text)
-            sample = acquisition_format
-            samples = []
-            for position, line in enumerate(text):
-                jsonObj = json.loads(text[position])
+            for index, line in enumerate(text):
+                jsonObj = json.loads(line)
                 sample['payload']['values'].append([float(jsonObj['Body']['Temperature'])])
-                if position % 720 == 0:
+                if len(sample['payload']['values']) % 720 == 0:
                     with open(f'sample_{j}.json', 'w') as file:
                         json.dump(sample, file)
                     j += 1
-                    # print(sample)
-                    # samples.append(sample)
                     sample['payload']['values'].clear()
-
-for i, sample in enumerate(samples):
-    with open(f'sample_{i}.json', 'w') as file:
-        json.dump(sample, file)

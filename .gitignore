@@ -1,4 +1,6 @@
 proccessed_data/
 iot_configs.h
-*/output
+output/
 .archive
+Data/
+sample_*.json
