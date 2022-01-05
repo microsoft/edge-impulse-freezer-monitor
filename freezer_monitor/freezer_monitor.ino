@@ -109,7 +109,10 @@ void loop() {
 		EI_IMPULSE_ERROR res = run_classifier(&signal, &result, false);
 		ei_printf("run_classifier returned: %d\n", res);
 		ei_printf("anomaly:\t%.3f\n", result.anomaly);
-        sendTelemetry(result.anomaly);
+        if (EI_CLASSIFIER_HAS_ANOMALY == 1)
+        {
+            sendTelemetry(result.anomaly);
+        }
 		delay (1000);
 		feature_ix = 0;
 		if (res != 0) return;
@@ -169,10 +172,9 @@ static void getTelemetryPayload(az_span payload, az_span* out_payload, float pay
   payload = az_span_copy(
       payload, AZ_SPAN_FROM_STR("{ \"deviceId\": \"" IOT_CONFIG_DEVICE_ID "\", \"msgCount\": "));
   (void)az_span_u32toa(payload, telemetry_send_count++, &payload);
-  payload = az_span_copy(payload, AZ_SPAN_FROM_STR(" \"anomalyScore\": \""));
+  payload = az_span_copy(payload, AZ_SPAN_FROM_STR(" \"anomalyScore\": "));
   (void)az_span_dtoa(payload, payloadValue, 4, &payload);
   payload = az_span_copy(payload, AZ_SPAN_FROM_STR(" }"));
-  payload = az_span_copy_u8(payload, '\0');
 
 
   *out_payload = az_span_slice(original_payload, 0, az_span_size(original_payload) - az_span_size(payload));
