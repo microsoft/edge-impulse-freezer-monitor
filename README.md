@@ -1,6 +1,6 @@
 # Edge Impulse + Azure IoT Hub Freezer Monitor
 
-This code is used in [this turoial](), hosted on Hackster.io.
+This code is used in [this turoial](https://www.hackster.io/adi-azulay/edge-impulse-scientific-freezer-monitor-5448ee), hosted on Hackster.io.
 
 ## Contributing
 
