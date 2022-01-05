@@ -85,6 +85,11 @@ void setup() {
 }
 
 void loop() {
+    if (sasToken.IsExpired())
+    {
+        esp_mqtt_client_destroy(mqtt_client);
+        initializeMqttClient();
+    }
 	static unsigned long last_interval_ms = 0;
 
 
