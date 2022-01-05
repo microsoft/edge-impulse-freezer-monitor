@@ -77,7 +77,6 @@ void loop(void)
     {
         esp_mqtt_client_destroy(mqtt_client);
         initializeMqttClient();
-        Logger.Info("renewed");
     }
   if ((int)(millis() - last_sent_time_ms) >= send_interval_ms)
   {     
